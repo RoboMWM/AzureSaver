@@ -1,0 +1,6 @@
+name: AzureSaver
+main: com.robomwm.azuresaver.AzureSaver
+version: '${project.version}'
+api-version: '1.13'
+author: RoboMWM
+website: https://robomwm.com
