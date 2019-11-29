@@ -6,6 +6,8 @@ import com.microsoft.rest.LogLevel;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
+import net.md_5.bungee.api.event.ServerDisconnectEvent;
+import net.md_5.bungee.api.event.ServerKickEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
@@ -81,26 +83,27 @@ public class AzureSaver extends Plugin implements Listener
         if (this.getProxy().getPlayers().size() > 1)
             return;
         vm.start();
-        ServerInfo server = this.getProxy().getServerInfo("mlg");
+        ServerInfo server = this.getProxy().getServerInfo("lobby");
         event.getPlayer().connect(server);
     }
 
     @EventHandler
     public void onLastLeave(PlayerDisconnectEvent event)
     {
-        if (this.getProxy().getPlayers().size() > 0) //is player removed from this list before or after this event?
+        getLogger().info(String.valueOf(this.getProxy().getPlayers().size()));
+
+        if (this.getProxy().getPlayers().size() > 1) //player is removed from list after this event
             return;
 
-        getProxy().getScheduler().schedule(this, new Runnable()
+        getLogger().info("scheduling");
+
+        getProxy().getScheduler().schedule(this, () ->
         {
-            @Override
-            public void run()
-            {
-                if (getProxy().getPlayers().size() > 0)
-                    return;
-                //turn off VM
-                vm.deallocateAsync();
-            }
+            if (getProxy().getPlayers().size() > 0)
+                return;
+            //turn off VM
+            getLogger().info("turning off");
+            vm.deallocate();
         }, 1, TimeUnit.MINUTES);
     }
 }
