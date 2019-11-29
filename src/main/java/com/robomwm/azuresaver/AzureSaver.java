@@ -3,13 +3,17 @@ package com.robomwm.azuresaver;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.rest.LogLevel;
+import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
+import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.event.ServerDisconnectEvent;
 import net.md_5.bungee.api.event.ServerKickEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -30,6 +34,7 @@ public class AzureSaver extends Plugin implements Listener
 {
     private Azure azure;
     private VirtualMachine vm;
+    private ScheduledTask task;
 
     @Override
     public void onEnable()
@@ -84,7 +89,22 @@ public class AzureSaver extends Plugin implements Listener
             return;
         vm.start();
         ServerInfo server = this.getProxy().getServerInfo("lobby");
-        event.getPlayer().connect(server);
+        event.getPlayer().connect(server, new Callback<Boolean>()
+        {
+            @Override
+            public void done(Boolean result, Throwable error)
+            {
+                getLogger().info("k done");
+            }
+        }, true, 25);
+    }
+
+    @EventHandler
+    public void onJoinServer(LoginEvent event)
+    {
+        getLogger().info("javadocs succ");
+        if (event.isCancelled())
+            event.setCancelReason("ok boomer");
     }
 
     @EventHandler
@@ -97,13 +117,17 @@ public class AzureSaver extends Plugin implements Listener
 
         getLogger().info("scheduling");
 
-        getProxy().getScheduler().schedule(this, () ->
+        if (task != null)
+            getProxy().getScheduler().cancel(task);
+
+        task = getProxy().getScheduler().schedule(this, () ->
         {
+            task = null;
             if (getProxy().getPlayers().size() > 0)
                 return;
             //turn off VM
             getLogger().info("turning off");
             vm.deallocate();
-        }, 1, TimeUnit.MINUTES);
+        }, 10, TimeUnit.MINUTES);
     }
 }
