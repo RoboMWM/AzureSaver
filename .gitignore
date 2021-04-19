@@ -68,3 +68,8 @@ out/
 target/
 *.MF
 *.name
+
+.classpath
+.factorypath
+.project
+.settings/
